@@ -4,7 +4,7 @@ export type Condition = "any-change" | "keyword" | "price-below";
 
 export type DiffRow = {
   type: " " | "+" | "-";
-  text: string;
+  line: string;
 };
 
 export const ALERT_MIN_GAP_MS = 6 * 60 * 60 * 1000;
@@ -22,45 +22,54 @@ export async function sha256Hex(content: string): Promise<string> {
   return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export function extractPrice(content: string): number | null {
+export function extractPrice(content: string): { price: number; currency: string } | null {
   const match = content.match(/[₹$€£]\s*([0-9][0-9,]*(?:\.[0-9]+)?)/);
   if (!match) return null;
   const price = Number(match[1].replace(/,/g, ""));
-  return price > 0 && price <= 10_000_000 ? price : null;
+  return price > 0 && price <= 10_000_000 ? { price, currency: match[0][0] } : null;
 }
 
-type EvaluateOptions = {
+export type EvalInput = {
   condition: Condition;
-  previousHash: string | null;
-  nextHash: string;
-  now: number;
-  lastAlertAt?: number | null;
-  content?: string;
   keyword?: string;
-  prevHadKeyword?: boolean;
-  nextPrice?: number | null;
   targetPrice?: number;
-  previousAlertedPrice?: number | null;
+  prevHash?: string | null;
+  prevHadKeyword: boolean;
+  nextHash: string;
+  nextText: string;
+  nextPrice: number | null;
+  lastAlertedAt?: number | null;
+  lastAlertedPrice?: number | null;
+  now: number;
 };
 
-export function evaluate(options: EvaluateOptions): { changed: boolean; alert: boolean } {
-  const changed = options.previousHash === null || options.previousHash !== options.nextHash;
-  if (!changed || (options.lastAlertAt != null && options.now - options.lastAlertAt < ALERT_MIN_GAP_MS)) {
-    return { changed, alert: false };
+export type EvalOutput = {
+  changed: boolean;
+  alert: "change" | "keyword" | "price" | null;
+};
+
+export function evaluate(options: EvalInput): EvalOutput {
+  const changed = options.prevHash == null || options.prevHash !== options.nextHash;
+  if (options.lastAlertedAt != null && options.now - options.lastAlertedAt < ALERT_MIN_GAP_MS) {
+    return { changed, alert: null };
   }
 
-  let alert = false;
+  let alert: EvalOutput["alert"] = null;
   if (options.condition === "any-change") {
-    alert = true;
+    if (changed) alert = "change";
   } else if (options.condition === "keyword") {
-    alert = !options.prevHadKeyword &&
+    if (!options.prevHadKeyword &&
       options.keyword != null &&
-      options.content?.toLocaleLowerCase().includes(options.keyword.toLocaleLowerCase()) === true;
+      options.nextText.toLocaleLowerCase().includes(options.keyword.toLocaleLowerCase())) {
+      alert = "keyword";
+    }
   } else {
-    alert = options.nextPrice != null &&
+    if (options.nextPrice != null &&
       options.targetPrice != null &&
       options.nextPrice <= options.targetPrice &&
-      (options.previousAlertedPrice == null || options.nextPrice < options.previousAlertedPrice);
+      (options.lastAlertedPrice == null || options.nextPrice < options.lastAlertedPrice)) {
+      alert = "price";
+    }
   }
 
   return { changed, alert };
@@ -69,13 +78,11 @@ export function evaluate(options: EvaluateOptions): { changed: boolean; alert: b
 export function buildDiff(previous: string, next: string): DiffRow[] {
   const changes = diffLines(previous, next);
   const rows: DiffRow[] = [];
-  let line = 0;
   for (const change of changes) {
     const type: DiffRow["type"] = change.added ? "+" : change.removed ? "-" : " ";
     const lines = change.value.split(/\r?\n/);
     if (lines.at(-1) === "") lines.pop();
-    for (const text of lines) rows.push({ type, text });
-    if (!change.added && !change.removed) line += lines.length;
+    for (const line of lines) rows.push({ type, line });
   }
 
   const changedIndexes = rows.flatMap((row, index) => row.type === " " ? [] : [index]);
