@@ -49,6 +49,19 @@ test("keyword alerts once per appearance episode, case-insensitively", () => {
   assert.deepEqual(evaluate({ ...input, prevHash: "a", nextHash: "a", nextText: "BACK in stock" }), { changed: false, alert: "keyword" });
 });
 
+test("empty keywords never alert", () => {
+  assert.deepEqual(evaluate({
+    condition: "keyword",
+    keyword: "",
+    prevHash: "a",
+    nextHash: "b",
+    nextText: "anything",
+    prevHadKeyword: false,
+    nextPrice: null,
+    now: 0,
+  }), { changed: true, alert: null });
+});
+
 test("price alerts at threshold and only below the prior alerted price", () => {
   const input: EvalInput = { condition: "price-below", prevHash: "a", nextHash: "a", nextText: "", nextPrice: 100, targetPrice: 100, lastAlertedPrice: null, prevHadKeyword: false, now: 0 };
   assert.deepEqual(evaluate(input), { changed: false, alert: "price" });

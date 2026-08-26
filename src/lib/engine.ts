@@ -2,10 +2,10 @@ import { diffLines } from "diff";
 
 export type Condition = "any-change" | "keyword" | "price-below";
 
-export type DiffRow = {
+export interface DiffRow {
   type: " " | "+" | "-";
   line: string;
-};
+}
 
 export const ALERT_MIN_GAP_MS = 6 * 60 * 60 * 1000;
 
@@ -29,7 +29,7 @@ export function extractPrice(content: string): { price: number; currency: string
   return price > 0 && price <= 10_000_000 ? { price, currency: match[0][0] } : null;
 }
 
-export type EvalInput = {
+export interface EvalInput {
   condition: Condition;
   keyword?: string;
   targetPrice?: number;
@@ -41,12 +41,12 @@ export type EvalInput = {
   lastAlertedAt?: number | null;
   lastAlertedPrice?: number | null;
   now: number;
-};
+}
 
-export type EvalOutput = {
+export interface EvalOutput {
   changed: boolean;
   alert: "change" | "keyword" | "price" | null;
-};
+}
 
 export function evaluate(options: EvalInput): EvalOutput {
   const changed = options.prevHash == null || options.prevHash !== options.nextHash;
@@ -59,8 +59,8 @@ export function evaluate(options: EvalInput): EvalOutput {
     if (changed) alert = "change";
   } else if (options.condition === "keyword") {
     if (!options.prevHadKeyword &&
-      options.keyword != null &&
-      options.nextText.toLocaleLowerCase().includes(options.keyword.toLocaleLowerCase())) {
+      options.keyword &&
+      options.nextText.toLowerCase().includes(options.keyword.toLowerCase())) {
       alert = "keyword";
     }
   } else {
