@@ -1,0 +1,30 @@
+{
+  "name": "pageping",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "backend": "convex dev",
+    "build": "tsc --noEmit && vite build",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@agentmail/convex": "^0.1.0",
+    "@firecrawl/firecrawl-convex": "^0.1.1",
+    "convex": "^1.29.0",
+    "diff": "^9.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0",
+    "vite": "^7.0.0"
+  }
+}
