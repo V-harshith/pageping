@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { internalMutation } from "./_generated/server";
-import { upsertUser } from "./auth";
 import { makePublicId } from "./watches";
 
 // ponytail: no @types/node here; deployment env vars come via process.env at runtime
@@ -29,10 +28,15 @@ export const onMessageReceived = internalMutation({
     const userEmail = from.trim().toLowerCase();
     if (!from.includes("@") || !url) return null;
 
-    // ponytail: upsertUser takes a loose {db:any}; db.get falls back to untyped rows here
-    const userId = await upsertUser(ctx as { db: any }, userEmail);
-    const user = (await ctx.db.get(userId)) as unknown;
-    if (!user) return null;
+    // Inbound tracking is opt-in: only senders who already signed up via OTP get watches.
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_email", (q) => q.eq("email", userEmail))
+      .unique();
+    if (!user) {
+      console.info(`[inbound] ignoring mail from unknown sender ${userEmail}`);
+      return null;
+    }
     // ponytail: O(n) scan bounded by MAX_WATCHES_PER_USER=25 rows
     const mine = await ctx.db
       .query("watches")
