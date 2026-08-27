@@ -40,6 +40,16 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    document.title = path.startsWith("/w/")
+      ? "Watching · PagePing"
+      : path === "/login"
+        ? "Sign in · PagePing"
+        : path === "/dashboard"
+          ? "Dashboard · PagePing"
+          : "PagePing — watch any page, get emailed";
+  }, [path]);
+
   let page: React.ReactNode;
   if (path.startsWith("/w/")) page = <WatchPage id={path.slice(3)} />;
   else if (path === "/login") page = <Login />;

@@ -4,6 +4,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import DiffView from "../components/DiffView";
 import AddWatchForm from "../components/AddWatchForm";
 import { nav, getSession } from "../lib/session";
+import { money } from "../lib/money";
 
 function ago(ts: number) {
   const m = Math.max(1, Math.round((Date.now() - ts) / 60000));
@@ -59,14 +60,14 @@ export default function WatchPage({ id }: { id: string }) {
             <span>
               Price now:{" "}
               <b className="text-emerald-400">
-                {watch.currency ?? "$"}
+                {money(watch.currency)}
                 {watch.currentPrice}
               </b>
             </span>
           )}
           {watch.targetPrice != null && (
             <span className="text-zinc-400">
-              Target: {watch.currency ?? ""}
+              Target: {money(watch.currency)}
               {watch.targetPrice}
             </span>
           )}

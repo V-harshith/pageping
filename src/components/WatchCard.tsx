@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import { getSession, nav } from "../lib/session";
 import { toast } from "../App";
 import { SITE_URL } from "../lib/site";
+import { money } from "../lib/money";
 
 type WatchView = FunctionReturnType<typeof api.watches.list>[number];
 
@@ -66,7 +67,7 @@ export default function WatchCard({ w }: { w: WatchView }) {
         </div>
         {w.currentPrice != null && (
           <span className="shrink-0 rounded-md bg-emerald-950 px-2 py-1 text-sm font-bold text-emerald-400">
-            {w.currency ?? "$"}
+            {money(w.currency)}
             {w.currentPrice}
           </span>
         )}
