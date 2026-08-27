@@ -12,7 +12,9 @@ import type * as alerts from "../alerts.js";
 import type * as auth from "../auth.js";
 import type * as check from "../check.js";
 import type * as crons from "../crons.js";
+import type * as emailWebhook from "../emailWebhook.js";
 import type * as health from "../health.js";
+import type * as http from "../http.js";
 import type * as scanner from "../scanner.js";
 import type * as watches from "../watches.js";
 
@@ -27,7 +29,9 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   check: typeof check;
   crons: typeof crons;
+  emailWebhook: typeof emailWebhook;
   health: typeof health;
+  http: typeof http;
   scanner: typeof scanner;
   watches: typeof watches;
 }>;

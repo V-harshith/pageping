@@ -29,7 +29,7 @@ function randomSixDigitCode(): string {
   return code;
 }
 
-async function upsertUser(ctx: { db: any }, email: string) {
+export async function upsertUser(ctx: { db: any }, email: string) {
   const existing = await ctx.db
     .query("users")
     .withIndex("by_email", (q: any) => q.eq("email", email))
