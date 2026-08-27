@@ -12,7 +12,19 @@ export default function Dashboard() {
     if (!t) nav("/login");
     setToken(t);
   }, []);
+  // Live ownership check: null session (expired/deleted) bounces to /login.
+  const session = useQuery(api.auth.getSession, token ? { token } : "skip");
   const watches = useQuery(api.watches.list, token ? { token } : "skip");
+
+  if (token === null) return null; // redirecting in effect
+  if (session === undefined || (session !== null && watches === undefined)) {
+    return <div className="mx-auto max-w-2xl px-4 py-8 text-sm text-zinc-500">Loading…</div>;
+  }
+  if (session === null) {
+    clearSession();
+    nav("/login");
+    return null;
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -30,9 +42,8 @@ export default function Dashboard() {
           Sign out
         </button>
       </header>
-      <AddWatchForm />
+      {session && <AddWatchForm />}
       <div className="mt-6 grid gap-3">
-        {watches === undefined && <p className="text-sm text-zinc-500">Loading…</p>}
         {watches?.length === 0 && (
           <p className="text-sm text-zinc-500">Nothing watched yet. Paste a URL above.</p>
         )}

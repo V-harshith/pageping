@@ -4,6 +4,7 @@ import { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
 import { getSession, nav } from "../lib/session";
 import { toast } from "../App";
+import { SITE_URL } from "../lib/site";
 
 type WatchView = FunctionReturnType<typeof api.watches.list>[number];
 
@@ -13,11 +14,6 @@ const LABELS = {
   "price-below": "Price \u2264",
 } as const;
 
-// The recheck endpoint lives on the .convex.site domain; derive it from the .cloud URL.
-const SITE_URL = (import.meta.env.VITE_CONVEX_URL as string).replace(
-  ".convex.cloud",
-  ".convex.site",
-);
 
 export default function WatchCard({ w }: { w: WatchView }) {
   const del = useMutation(api.watches.remove);

@@ -150,6 +150,59 @@ export const get = query({
   },
 });
 
+/** Unauthenticated share-view: minimal fields only, ownerEmail never leaves the server. */
+export const getPublic = query({
+  args: { watchId: v.id("watches") },
+  returns: v.union(
+    v.null(),
+    v.object({
+      watch: v.object({
+        title: v.string(),
+        url: v.string(),
+        status: v.union(v.literal("active"), v.literal("dead")),
+        currentPrice: v.optional(v.number()),
+        currency: v.optional(v.string()),
+        targetPrice: v.optional(v.number()),
+        keyword: v.optional(v.string()),
+        lastCheckedAt: v.optional(v.number()),
+      }),
+      snapshots: v.array(
+        v.object({
+          contentHash: v.string(),
+          checkedAt: v.number(),
+          markdown: v.string(),
+        }),
+      ),
+    }),
+  ),
+  handler: async (ctx, { watchId }) => {
+    const doc = await ctx.db.get(watchId);
+    if (!doc) return null;
+    const snaps = await ctx.db
+      .query("snapshots")
+      .withIndex("by_watch_time", (q) => q.eq("watchId", watchId))
+      .order("desc")
+      .take(20);
+    return {
+      watch: {
+        title: doc.title,
+        url: doc.url,
+        status: doc.status,
+        currentPrice: doc.currentPrice,
+        currency: doc.currency,
+        targetPrice: doc.targetPrice,
+        keyword: doc.keyword,
+        lastCheckedAt: doc.lastCheckedAt,
+      },
+      snapshots: snaps.map((s) => ({
+        contentHash: s.contentHash,
+        checkedAt: s.checkedAt,
+        markdown: s.markdown,
+      })),
+    };
+  },
+});
+
 export const update = mutation({
   args: {
     token: v.string(),

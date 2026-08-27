@@ -12,9 +12,9 @@ function errMsg(e: unknown): string {
 const inputCls =
   "rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 outline-none focus:border-emerald-500";
 
-export default function AddWatchForm() {
+export default function AddWatchForm({ presetUrl = "" }: { presetUrl?: string }) {
   const create = useMutation(api.watches.create);
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(presetUrl);
   const [condition, setCondition] = useState<"any-change" | "keyword" | "price-below">("any-change");
   const [keyword, setKeyword] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
