@@ -44,6 +44,7 @@ export default defineSchema({
   })
     .index("by_owner", ["ownerEmail"])
     .index("by_due", ["status", "lastCheckedAt"])
+    .index("by_publicId", ["publicId"])
     .index("by_owner_url", ["ownerEmail", "url"]),
 
   snapshots: defineTable({
