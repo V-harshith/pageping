@@ -59,19 +59,19 @@ export default function WatchCard({ w }: { w: WatchView }) {
             href={w.url}
             target="_blank"
             rel="noreferrer"
-            className="block truncate text-xs text-zinc-500 underline"
+            className="block truncate text-xs text-stone-500 underline"
           >
             {w.url}
           </a>
         </div>
         {w.currentPrice != null && (
-          <span className="shrink-0 rounded-md bg-emerald-950 px-2 py-1 text-sm font-bold text-emerald-400">
+          <span className="shrink-0 rounded-md bg-emerald-100 px-2 py-1 text-sm font-bold text-emerald-800">
             {money(w.currency)}
             {w.currentPrice}
           </span>
         )}
       </div>
-      <p className="mt-2 text-xs text-zinc-400">
+      <p className="mt-2 text-xs text-stone-500">
         {LABELS[w.condition]}
         {w.keyword ? `: "${w.keyword}"` : ""}
         {w.condition === "price-below" ? ` ${w.targetPrice}` : ""}
@@ -82,7 +82,7 @@ export default function WatchCard({ w }: { w: WatchView }) {
           : "never"}
         {w.status === "dead" && " · DEAD (site unreachable)"}
         {" · "}
-        <span className="font-mono text-zinc-500">id {w.publicId}</span>
+        <span className="font-mono text-stone-400">id {w.publicId}</span>
       </p>
       {w.condition === "price-below" && w.currentPrice == null && (
         <p className="mt-1 text-xs text-amber-500">

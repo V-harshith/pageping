@@ -60,7 +60,7 @@ export default function AddWatchForm({ presetUrl = "" }: { presetUrl?: string })
             key={c}
             type="button"
             onClick={() => setCondition(c)}
-            className={`rounded-full px-3 py-1 text-xs font-medium ${condition === c ? "bg-emerald-600 text-zinc-950" : "bg-zinc-800 hover:bg-zinc-700"} ${FOCUS_RING} ${U_TRANSITION}`}
+            className={`rounded-full border px-3 py-1 text-xs font-medium ${condition === c ? "border-stone-900 bg-stone-900 text-white" : "border-stone-200 bg-white text-stone-600 hover:border-stone-300 hover:text-stone-900"} ${FOCUS_RING} ${U_TRANSITION}`}
           >
             {c === "any-change" ? "Any change" : c === "keyword" ? "Keyword appears" : "Price drops below"}
           </button>

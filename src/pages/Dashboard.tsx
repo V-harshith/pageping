@@ -52,7 +52,7 @@ export default function Dashboard() {
           <Logo onClick={() => nav("/")} />
         </h1>
         <button
-          className={`text-xs text-zinc-400 hover:text-zinc-200 ${FOCUS_RING} rounded px-1 ${U_TRANSITION}`}
+          className={`text-xs text-stone-500 hover:text-stone-900 ${FOCUS_RING} rounded px-1 ${U_TRANSITION}`}
           onClick={() => {
             clearSession();
             nav("/");
@@ -64,16 +64,16 @@ export default function Dashboard() {
       {session && <AddWatchForm />}
       <div className="mt-6 grid gap-3">
         {watches?.length === 0 && (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-8 text-center">
-            <p aria-hidden="true" className="text-3xl text-zinc-600">↑</p>
-            <p className="mt-2 text-sm text-zinc-500">
+          <div className="rounded-xl border border-dashed border-stone-300 bg-white p-8 text-center">
+            <p aria-hidden="true" className="text-3xl text-stone-300">↑</p>
+            <p className="mt-2 text-sm text-stone-500">
               Nothing watched yet — paste a URL above.
             </p>
           </div>
         )}
         {watches?.map((w) => <WatchCard key={w._id} w={w} />)}
       </div>
-      <footer className="mt-8 text-center text-xs text-zinc-500">
+      <footer className="mt-8 text-center text-xs text-stone-400">
         Free forever · open source · powered by Convex + Firecrawl + AgentMail
       </footer>
     </div>

@@ -61,15 +61,15 @@ export default function App() {
   else page = <Home />;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-stone-50 text-stone-900">
       {page}
       {toastState && (
         <div
           role="status"
           className={`fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg px-4 py-2 text-sm font-medium shadow-lg ${
             toastState.kind === "success"
-              ? "bg-emerald-600 text-zinc-950"
-              : "bg-red-600"
+              ? "bg-stone-900 text-white"
+              : "bg-red-600 text-white"
           }`}
         >
           {toastState.msg}

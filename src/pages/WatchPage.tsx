@@ -29,7 +29,7 @@ export default function WatchPage({ id }: { id: string }) {
         </header>
         <section className={`${CARD} text-center`} aria-live="polite">
           <h2 className="text-lg font-bold">Watch not found</h2>
-          <p className="mt-1 text-sm text-zinc-400">
+          <p className="mt-1 text-sm text-stone-500">
             This watch doesn&apos;t exist or was deleted by its owner.
           </p>
           <p className="mt-4">
@@ -74,7 +74,7 @@ export default function WatchPage({ id }: { id: string }) {
           href={watch.url}
           target="_blank"
           rel="noreferrer"
-          className={`text-xs text-zinc-500 underline hover:text-zinc-300 ${FOCUS_RING} ${U_TRANSITION}`}
+          className={`text-xs text-stone-500 underline hover:text-stone-900 ${FOCUS_RING} ${U_TRANSITION}`}
         >
           {watch.url}
         </a>
@@ -82,42 +82,42 @@ export default function WatchPage({ id }: { id: string }) {
           {watch.currentPrice != null && (
             <span>
               Price now:{" "}
-              <b className="text-emerald-400">
+              <b className="text-emerald-700">
                 {money(watch.currency)}
                 {watch.currentPrice}
               </b>
             </span>
           )}
           {watch.targetPrice != null && (
-            <span className="text-zinc-400">
+            <span className="text-stone-500">
               Target: {money(watch.currency)}
               {watch.targetPrice}
             </span>
           )}
-          {watch.keyword && <span className="text-zinc-400">Watching for: "{watch.keyword}"</span>}
-          <span className="text-zinc-500">
+          {watch.keyword && <span className="text-stone-500">Watching for: "{watch.keyword}"</span>}
+          <span className="text-stone-500">
             {watch.lastCheckedAt ? `Checked ${ago(watch.lastCheckedAt)}` : "First check pending…"}
           </span>
         </div>
       </section>
 
       {watch.status === "dead" && (
-        <p className="mt-3 rounded-lg bg-red-950/40 p-3 text-sm text-red-300">
+        <p className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
           This site stopped responding — checks are paused.
         </p>
       )}
 
       <section className="mt-6">
-        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-400">Latest change</h3>
+        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">Latest change</h3>
         {latest && previous ? (
           <>
-            <p className="mb-2 text-xs text-zinc-500">
+            <p className="mb-2 text-xs text-stone-500">
               {ago(previous.checkedAt)} → {ago(latest.checkedAt)}
             </p>
             <DiffView oldText={previous.markdown} newText={latest.markdown} />
           </>
         ) : (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-stone-500">
             {latest ? "Only one snapshot so far — no change detected yet." : "No snapshots yet."}
           </p>
         )}
@@ -125,23 +125,23 @@ export default function WatchPage({ id }: { id: string }) {
 
       {snapshots.length > 1 && (
         <section className="mt-6">
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-400">
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
             History ({snapshots.length} recent changes)
           </h3>
-          <ol className="space-y-1 text-sm text-zinc-400">
+          <ol className="space-y-1 text-sm text-stone-500">
             {snapshots.map((s, i) => (
-              <li key={s.contentHash + s.checkedAt} className="flex justify-between border-b border-zinc-800 py-1">
+              <li key={s.contentHash + s.checkedAt} className="flex justify-between border-b border-stone-200 py-1">
                 <span>
                   Snapshot {i + 1}
                 </span>
-                <span className="text-zinc-500">{ago(s.checkedAt)}</span>
+                <span className="text-stone-500">{ago(s.checkedAt)}</span>
               </li>
             ))}
           </ol>
         </section>
       )}
 
-      <section className="mt-8 rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+      <section className="mt-8 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
         <h3 className="mb-2 font-semibold">Want updates like this?</h3>
         <AddWatchForm presetUrl={watch.url} />
       </section>
@@ -162,7 +162,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 function BackLink() {
   return (
     <button
-      className={`text-xs text-zinc-400 hover:text-zinc-200 rounded px-1 ${FOCUS_RING} ${U_TRANSITION}`}
+      className={`text-xs text-stone-500 hover:text-stone-900 rounded px-1 ${FOCUS_RING} ${U_TRANSITION}`}
       onClick={() => nav("/dashboard")}
     >
       Back to dashboard

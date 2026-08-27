@@ -47,7 +47,7 @@ export default function Login() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-sm flex-col justify-center gap-4 px-4">
-      <h1 className="text-2xl font-bold">Sign in to PagePing</h1>
+      <h1 className="font-serif text-3xl tracking-tight text-stone-900">Sign in to PagePing</h1>
       {step === "email" ? (
         <form
           className="flex flex-col gap-4"
@@ -73,7 +73,7 @@ export default function Login() {
         </form>
       ) : (
         <>
-          <p className="text-sm text-zinc-400">Code sent to {email}</p>
+          <p className="text-sm text-stone-500">Code sent to {email}</p>
           <form
             className="flex flex-col gap-4"
             onSubmit={(e) => {

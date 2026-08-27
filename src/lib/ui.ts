@@ -2,36 +2,36 @@ export const U_TRANSITION =
   "transition-colors duration-150 motion-reduce:transition-none";
 
 export const FOCUS_RING =
-  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60";
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600/60";
 
-export const BTN_PRIMARY = `rounded-lg bg-emerald-600 px-5 py-3 font-medium hover:bg-emerald-500 disabled:opacity-50 ${FOCUS_RING} ${U_TRANSITION}`;
+export const BTN_PRIMARY = `rounded-lg bg-stone-900 px-5 py-3 font-medium text-white shadow-sm hover:bg-stone-700 disabled:opacity-50 ${FOCUS_RING} ${U_TRANSITION}`;
 
-export const BTN_GHOST = `rounded-md bg-zinc-800 px-3 py-2 text-sm min-h-[36px] hover:bg-zinc-700 disabled:opacity-50 ${FOCUS_RING} ${U_TRANSITION}`;
+export const BTN_GHOST = `rounded-md border border-stone-200 bg-white px-3 py-2 text-sm min-h-[36px] text-stone-700 hover:border-stone-300 hover:text-stone-900 disabled:opacity-50 ${FOCUS_RING} ${U_TRANSITION}`;
 
-export const BTN_DANGER = `rounded-md bg-red-900/70 px-3 py-2 text-sm min-h-[36px] hover:bg-red-800 ${FOCUS_RING} ${U_TRANSITION}`;
+export const BTN_DANGER = `rounded-md border border-red-200 bg-white px-3 py-2 text-sm min-h-[36px] text-red-700 hover:bg-red-50 disabled:opacity-50 ${FOCUS_RING} ${U_TRANSITION}`;
 
-export const INPUT = `w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 outline-none focus:border-emerald-500 ${FOCUS_RING} ${U_TRANSITION}`;
+export const INPUT = `w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-stone-900 outline-none placeholder:text-stone-400 focus:border-emerald-600 ${FOCUS_RING} ${U_TRANSITION}`;
 
-export const CARD = "rounded-xl border border-zinc-800 bg-zinc-900 p-4";
+export const CARD = "rounded-xl border border-stone-200 bg-white p-4 shadow-sm";
 
-export const SKELETON = "animate-pulse rounded bg-zinc-800";
+export const SKELETON = "animate-pulse rounded bg-stone-200";
 
 export function statusPill(status: string) {
   if (status === "active")
     return {
-      cls: "bg-emerald-950 text-emerald-400",
-      dot: "bg-emerald-400",
+      cls: "bg-emerald-100 text-emerald-800",
+      dot: "bg-emerald-600",
       label: "Active",
     };
   if (status === "dead")
     return {
-      cls: "bg-red-950 text-red-400",
+      cls: "bg-red-100 text-red-700",
       dot: "bg-red-500",
       label: "Dead",
     };
   return {
-    cls: "bg-zinc-800 text-zinc-300",
-    dot: "bg-zinc-400",
+    cls: "bg-stone-100 text-stone-600",
+    dot: "bg-stone-400",
     label: status.charAt(0).toUpperCase() + status.slice(1),
   };
 }
