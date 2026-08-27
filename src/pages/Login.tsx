@@ -3,16 +3,12 @@ import { useAction, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { saveSession, nav } from "../lib/session";
 import { toast } from "../App";
+import { BTN_PRIMARY, INPUT } from "../lib/ui";
 
 function errMsg(e: unknown): string {
   const d = (e as { data?: unknown })?.data;
   return typeof d === "string" ? d : "Something went wrong.";
 }
-
-const inputCls =
-  "rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 outline-none focus:border-emerald-500";
-const btnCls =
-  "rounded-lg bg-emerald-600 px-3 py-2 font-semibold hover:bg-emerald-500 disabled:opacity-50";
 
 export default function Login() {
   const requestOtp = useAction(api.auth.requestOtp);
@@ -60,14 +56,18 @@ export default function Login() {
             void send();
           }}
         >
+          <label htmlFor="login-email" className="sr-only">
+            Email address
+          </label>
           <input
-            className={inputCls}
+            id="login-email"
+            className={INPUT}
             placeholder="you@example.com"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <button className={btnCls} disabled={busy || !email.includes("@")} type="submit">
+          <button className={BTN_PRIMARY} disabled={busy || !email.includes("@")} type="submit">
             Send code
           </button>
         </form>
@@ -81,15 +81,19 @@ export default function Login() {
               void verify();
             }}
           >
+            <label htmlFor="login-code" className="sr-only">
+              6-digit code
+            </label>
             <input
-              className={`${inputCls} tracking-widest`}
+              id="login-code"
+              className={`${INPUT} tracking-widest`}
               placeholder="6-digit code"
               inputMode="numeric"
               maxLength={6}
               value={code}
               onChange={(e) => setCode(e.target.value)}
             />
-            <button className={btnCls} disabled={busy || code.length !== 6} type="submit">
+            <button className={BTN_PRIMARY} disabled={busy || code.length !== 6} type="submit">
               Verify &amp; sign in
             </button>
           </form>

@@ -3,14 +3,12 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { getSession } from "../lib/session";
 import { toast } from "../App";
+import { BTN_PRIMARY, CARD, FOCUS_RING, INPUT, U_TRANSITION } from "../lib/ui";
 
 function errMsg(e: unknown): string {
   const d = (e as { data?: unknown })?.data;
   return typeof d === "string" ? d : "Something went wrong.";
 }
-
-const inputCls =
-  "rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 outline-none focus:border-emerald-500";
 
 export default function AddWatchForm({ presetUrl = "" }: { presetUrl?: string }) {
   const create = useMutation(api.watches.create);
@@ -39,7 +37,7 @@ export default function AddWatchForm({ presetUrl = "" }: { presetUrl?: string })
           : {}),
       });
       setUrl(""); setKeyword(""); setTargetPrice("");
-      toast("Watching.");
+      toast("Watching.", "success");
     } catch (e) {
       toast(errMsg(e));
     } finally {
@@ -48,20 +46,21 @@ export default function AddWatchForm({ presetUrl = "" }: { presetUrl?: string })
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+    <div className={CARD}>
       <input
-        className={inputCls}
+        className={INPUT}
         placeholder="https://any-store.com/product-page"
+        aria-label="URL to watch"
         value={url}
         onChange={(e) => setUrl(e.target.value)}
       />
-      <div className="flex gap-2">
+      <div className="mt-2 flex gap-2">
         {(["any-change", "keyword", "price-below"] as const).map((c) => (
           <button
             key={c}
             type="button"
             onClick={() => setCondition(c)}
-            className={`rounded-full px-3 py-1 text-xs font-medium ${condition === c ? "bg-emerald-600" : "bg-zinc-800 hover:bg-zinc-700"}`}
+            className={`rounded-full px-3 py-1 text-xs font-medium ${condition === c ? "bg-emerald-600 text-zinc-950" : "bg-zinc-800 hover:bg-zinc-700"} ${FOCUS_RING} ${U_TRANSITION}`}
           >
             {c === "any-change" ? "Any change" : c === "keyword" ? "Keyword appears" : "Price drops below"}
           </button>
@@ -69,23 +68,25 @@ export default function AddWatchForm({ presetUrl = "" }: { presetUrl?: string })
       </div>
       {condition === "keyword" && (
         <input
-          className={inputCls}
+          className={`mt-2 ${INPUT}`}
           placeholder='e.g. "in stock"'
+          aria-label="Keyword to watch for"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
         />
       )}
       {condition === "price-below" && (
         <input
-          className={inputCls}
+          className={`mt-2 ${INPUT}`}
           placeholder="Target price e.g. 999"
+          aria-label="Target price"
           inputMode="decimal"
           value={targetPrice}
           onChange={(e) => setTargetPrice(e.target.value)}
         />
       )}
       <button
-        className="rounded-lg bg-emerald-600 px-3 py-2 font-semibold hover:bg-emerald-500 disabled:opacity-50"
+        className={`mt-3 ${BTN_PRIMARY} w-full`}
         disabled={busy || !url.trim()}
         onClick={() => void submit()}
       >

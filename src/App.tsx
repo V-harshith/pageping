@@ -14,8 +14,12 @@ export function usePath(): string {
   return path;
 }
 
-let toastFn: ((msg: string) => void) | null = null;
-export function toast(msg: string) { toastFn?.(msg); }
+export type ToastKind = "error" | "success";
+
+let toastFn: ((msg: string, kind?: ToastKind) => void) | null = null;
+export function toast(msg: string, kind: ToastKind = "error") {
+  toastFn?.(msg, kind);
+}
 
 const FRIENDLY: Record<string, string> = {
   UNAUTHORIZED: "Please sign in again.",
@@ -32,11 +36,11 @@ const FRIENDLY: Record<string, string> = {
 
 export default function App() {
   const path = usePath();
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [toastState, setToastState] = useState<{ msg: string; kind: ToastKind } | null>(null);
   useEffect(() => {
-    toastFn = (m: string) => {
-      setToastMsg(FRIENDLY[m] ?? m);
-      setTimeout(() => setToastMsg(null), 4000);
+    toastFn = (m: string, kind: ToastKind = "error") => {
+      setToastState({ msg: FRIENDLY[m] ?? m, kind });
+      setTimeout(() => setToastState(null), 4000);
     };
   }, []);
 
@@ -59,9 +63,16 @@ export default function App() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       {page}
-      {toastMsg && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 rounded-lg bg-red-600 px-4 py-2 text-sm shadow-lg">
-          {toastMsg}
+      {toastState && (
+        <div
+          role="status"
+          className={`fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg px-4 py-2 text-sm font-medium shadow-lg ${
+            toastState.kind === "success"
+              ? "bg-emerald-600 text-zinc-950"
+              : "bg-red-600"
+          }`}
+        >
+          {toastState.msg}
         </div>
       )}
     </div>

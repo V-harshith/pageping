@@ -3,8 +3,10 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import DiffView from "../components/DiffView";
 import AddWatchForm from "../components/AddWatchForm";
+import Logo from "../components/Logo";
 import { nav, getSession } from "../lib/session";
 import { money } from "../lib/money";
+import { CARD, FOCUS_RING, SKELETON, U_TRANSITION, statusPill } from "../lib/ui";
 
 function ago(ts: number) {
   const m = Math.max(1, Math.round((Date.now() - ts) / 60000));
@@ -21,38 +23,59 @@ export default function WatchPage({ id }: { id: string }) {
 
   if (!valid || data === null)
     return (
-      <Shell>
-        <p>Watch not found.</p>
-        <BackLink />
-      </Shell>
+      <div className="mx-auto max-w-2xl px-4 py-10">
+        <header className="mb-8">
+          <Logo />
+        </header>
+        <section className={`${CARD} text-center`} aria-live="polite">
+          <h2 className="text-lg font-bold">Watch not found</h2>
+          <p className="mt-1 text-sm text-zinc-400">
+            This watch doesn&apos;t exist or was deleted by its owner.
+          </p>
+          <p className="mt-4">
+            <BackLink />
+          </p>
+        </section>
+      </div>
     );
   if (data === undefined)
     return (
       <Shell>
-        <p className="text-zinc-500">Loading…</p>
+        <div className={CARD}>
+          <div className={`h-5 w-2/3 ${SKELETON}`} />
+          <div className={`mt-3 h-3 w-1/2 ${SKELETON}`} />
+        </div>
+        <div className={`mt-6 h-24 ${SKELETON}`} />
       </Shell>
     );
 
   const { watch, snapshots } = data;
   const latest = snapshots[0];
   const previous = snapshots[1];
+  const pill = statusPill(watch.status);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
-      <header className="mb-6 flex items-center justify-between">
-        <h1 className="cursor-pointer text-xl font-bold" onClick={() => nav("/")}>
-          PagePing
+    <div className="mx-auto max-w-2xl px-4 py-10">
+      <header className="mb-8 flex items-center justify-between">
+        <h1>
+          <Logo onClick={() => nav("/")} />
         </h1>
         <span
-          className={`rounded-full px-2 py-1 text-xs ${watch.status === "active" ? "bg-emerald-950 text-emerald-400" : "bg-red-950 text-red-400"}`}
+          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium ${pill.cls}`}
         >
-          {watch.status}
+          <span aria-hidden="true" className={`size-1.5 rounded-full ${pill.dot}`} />
+          {pill.label}
         </span>
       </header>
 
-      <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+      <section className={CARD}>
         <h2 className="font-semibold">{watch.title || watch.url}</h2>
-        <a href={watch.url} target="_blank" rel="noreferrer" className="text-xs text-zinc-500 underline">
+        <a
+          href={watch.url}
+          target="_blank"
+          rel="noreferrer"
+          className={`text-xs text-zinc-500 underline hover:text-zinc-300 ${FOCUS_RING} ${U_TRANSITION}`}
+        >
           {watch.url}
         </a>
         <div className="mt-3 flex flex-wrap gap-4 text-sm">
@@ -100,21 +123,25 @@ export default function WatchPage({ id }: { id: string }) {
         )}
       </section>
 
-      <section className="mt-6">
-        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-400">
-          History ({snapshots.length} recent changes)
-        </h3>
-        <ol className="space-y-1 text-sm text-zinc-400">
-          {snapshots.map((s) => (
-            <li key={s.contentHash + s.checkedAt} className="flex justify-between border-b border-zinc-800 py-1">
-              <span>Change detected</span>
-              <span className="text-zinc-500">{ago(s.checkedAt)}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
+      {snapshots.length > 1 && (
+        <section className="mt-6">
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-zinc-400">
+            History ({snapshots.length} recent changes)
+          </h3>
+          <ol className="space-y-1 text-sm text-zinc-400">
+            {snapshots.map((s, i) => (
+              <li key={s.contentHash + s.checkedAt} className="flex justify-between border-b border-zinc-800 py-1">
+                <span>
+                  Snapshot {i + 1}
+                </span>
+                <span className="text-zinc-500">{ago(s.checkedAt)}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
 
-      <section className="mt-8 rounded-xl border border-dashed border-zinc-700 p-4">
+      <section className="mt-8 rounded-xl border border-zinc-800 bg-zinc-950 p-4">
         <h3 className="mb-2 font-semibold">Want updates like this?</h3>
         <AddWatchForm presetUrl={watch.url} />
       </section>
@@ -126,7 +153,7 @@ export default function WatchPage({ id }: { id: string }) {
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-2xl space-y-3 px-4 py-8">
+    <div className="mx-auto max-w-2xl space-y-3 px-4 py-10">
       {children}
     </div>
   );
@@ -134,7 +161,10 @@ function Shell({ children }: { children: React.ReactNode }) {
 
 function BackLink() {
   return (
-    <button className="text-xs text-zinc-400 hover:text-zinc-200" onClick={() => nav("/dashboard")}>
+    <button
+      className={`text-xs text-zinc-400 hover:text-zinc-200 rounded px-1 ${FOCUS_RING} ${U_TRANSITION}`}
+      onClick={() => nav("/dashboard")}
+    >
       Back to dashboard
     </button>
   );

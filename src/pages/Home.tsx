@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { getSession, nav } from "../lib/session";
 import AddWatchForm from "../components/AddWatchForm";
+import Logo from "../components/Logo";
+import { BTN_PRIMARY, FOCUS_RING, U_TRANSITION } from "../lib/ui";
 
 export default function Home() {
   const [signedIn, setSignedIn] = useState(false);
@@ -8,13 +10,19 @@ export default function Home() {
   return (
     <div className="mx-auto max-w-2xl px-4 py-16">
       <header className="mb-16 flex items-center justify-between">
-        <span className="text-lg font-bold">👁️ PagePing</span>
+        <Logo onClick={() => nav("/")} />
         {signedIn ? (
-          <button className="text-sm text-emerald-400 hover:underline" onClick={() => nav("/dashboard")}>
+          <button
+            className={`text-sm text-emerald-400 hover:underline ${FOCUS_RING} ${U_TRANSITION}`}
+            onClick={() => nav("/dashboard")}
+          >
             Dashboard →
           </button>
         ) : (
-          <button className="text-sm text-emerald-400 hover:underline" onClick={() => nav("/login")}>
+          <button
+            className={`text-sm text-emerald-400 hover:underline ${FOCUS_RING} ${U_TRANSITION}`}
+            onClick={() => nav("/login")}
+          >
             Sign in
           </button>
         )}
@@ -34,10 +42,7 @@ export default function Home() {
         {signedIn ? (
           <AddWatchForm />
         ) : (
-          <button
-            className="rounded-lg bg-emerald-600 px-5 py-3 font-semibold hover:bg-emerald-500"
-            onClick={() => nav("/login")}
-          >
+          <button className={BTN_PRIMARY} onClick={() => nav("/login")}>
             Start watching free →
           </button>
         )}
@@ -56,7 +61,7 @@ export default function Home() {
         ))}
       </div>
 
-      <footer className="mt-16 text-center text-xs text-zinc-600">
+      <footer className="mt-16 text-center text-xs text-zinc-500">
         Built on Convex · scraped by Firecrawl · emailed by AgentMail
       </footer>
     </div>

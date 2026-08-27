@@ -6,6 +6,7 @@ import { getSession, nav } from "../lib/session";
 import { toast } from "../App";
 import { SITE_URL } from "../lib/site";
 import { money } from "../lib/money";
+import { BTN_DANGER, BTN_GHOST, CARD } from "../lib/ui";
 
 type WatchView = FunctionReturnType<typeof api.watches.list>[number];
 
@@ -30,7 +31,7 @@ export default function WatchCard({ w }: { w: WatchView }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ publicId: w.publicId }),
       });
-      if (res.ok) toast("Queued — updating shortly.");
+      if (res.ok) toast("Queued — updating shortly.", "success");
       else if (res.status === 429) toast("TOO_SOON");
       else toast("NOT_FOUND");
     } catch {
@@ -50,9 +51,7 @@ export default function WatchCard({ w }: { w: WatchView }) {
   }
 
   return (
-    <div
-      className={`rounded-xl border p-4 ${w.status === "dead" ? "border-red-900 bg-red-950/40" : "border-zinc-800 bg-zinc-900"}`}
-    >
+    <div className={w.status === "dead" ? "rounded-xl border border-red-900 bg-red-950/40 p-4" : CARD}>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate font-semibold">{w.title || w.url}</p>
@@ -90,22 +89,19 @@ export default function WatchCard({ w }: { w: WatchView }) {
           ⚠ No price found on this page yet — price alerts won't fire.
         </p>
       )}
-      <div className="mt-3 flex gap-2 text-xs">
-        <button
-          className="rounded-md bg-zinc-800 px-2 py-1 hover:bg-zinc-700"
-          onClick={() => nav(`/w/${w._id}`)}
-        >
+      <div className="mt-3 flex gap-2">
+        <button className={BTN_GHOST} onClick={() => nav(`/w/${w._id}`)}>
           Open
         </button>
         <button
-          className="rounded-md bg-zinc-800 px-2 py-1 hover:bg-zinc-700 disabled:opacity-50"
+          className={BTN_GHOST}
           disabled={busy}
           onClick={() => void refresh()}
         >
           Refresh now
         </button>
         <button
-          className="ml-auto rounded-md bg-red-900/70 px-2 py-1 hover:bg-red-800"
+          className={`ml-auto ${BTN_DANGER}`}
           onClick={() => void remove()}
         >
           Delete
