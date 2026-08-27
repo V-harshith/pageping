@@ -1,74 +1,15 @@
 import { v } from "convex/values";
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { components, internal } from "./_generated/api";
-import { AgentMail } from "@agentmail/convex";
 import { FirecrawlClient } from "@firecrawl/firecrawl-convex";
+import { extractPrice, evaluate, normalizeContent, sha256Hex } from "../src/lib/engine";
 
 // ponytail: no @types/node in this project; deployment env vars come via process.env at runtime
 declare const process: { env: Record<string, string | undefined> };
 
 export const CHECK_INTERVAL_MS = 5 * 60 * 1000;
-const ALERT_MIN_GAP_MS = 6 * 60 * 60 * 1000;
 const MAX_FAILURES = 5;
 const SNAPSHOT_CAP = 20;
-
-// ponytail: dup of src/lib/engine's pure core because convex/ cannot bundle files outside convex/
-function normalizeContent(content: string): string {
-  return content.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).join("\n");
-}
-
-async function sha256Hex(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function extractPrice(content: string): { price: number; currency: string } | null {
-  const match = content.match(/[₹$€£]\s*([0-9][0-9,]*(?:\.[0-9]+)?)/);
-  if (!match) return null;
-  const price = Number(match[1].replace(/,/g, ""));
-  return price > 0 && price <= 10_000_000 ? { price, currency: match[0][0] } : null;
-}
-
-type AlertKind = "change" | "keyword" | "price";
-
-function evaluate(options: {
-  condition: "any-change" | "keyword" | "price-below";
-  keyword?: string;
-  targetPrice?: number;
-  prevHash: string | null;
-  prevHadKeyword: boolean;
-  nextHash: string;
-  nextText: string;
-  nextPrice: number | null;
-  lastAlertedAt: number | null;
-  lastAlertedPrice: number | null;
-  now: number;
-}): { changed: boolean; alert: AlertKind | null } {
-  const changed = options.prevHash == null || options.prevHash !== options.nextHash;
-  if (options.lastAlertedAt != null && options.now - options.lastAlertedAt < ALERT_MIN_GAP_MS) {
-    return { changed, alert: null };
-  }
-
-  let alert: AlertKind | null = null;
-  if (options.condition === "any-change") {
-    if (changed) alert = "change";
-  } else if (options.condition === "keyword") {
-    if (!options.prevHadKeyword &&
-      options.keyword &&
-      options.nextText.toLowerCase().includes(options.keyword.toLowerCase())) {
-      alert = "keyword";
-    }
-  } else {
-    if (options.nextPrice != null &&
-      options.targetPrice != null &&
-      options.nextPrice <= options.targetPrice &&
-      (options.lastAlertedPrice == null || options.nextPrice < options.lastAlertedPrice)) {
-      alert = "price";
-    }
-  }
-
-  return { changed, alert };
-}
 
 export function isDueWatch(
   w: { status: string; lastCheckedAt?: number },
@@ -77,6 +18,8 @@ export function isDueWatch(
 ): boolean {
   return w.status === "active" && (w.lastCheckedAt === undefined || now - w.lastCheckedAt >= intervalMs);
 }
+
+type AlertKind = NonNullable<ReturnType<typeof evaluate>["alert"]>;
 
 export function snapshotIdsToDelete(
   snaps: { id: string; checkedAt: number }[],
@@ -89,12 +32,9 @@ export function snapshotIdsToDelete(
     .map((s) => s.id);
 }
 
-// ponytail: module-level clients, structural-cast mirrors the auth.ts pattern
+// ponytail: module-level client, structural-cast mirrors the auth.ts pattern
 const firecrawl = new FirecrawlClient(components.firecrawl);
-const agentmail = new AgentMail(components.agentmail);
 const scrapeCtx = (ctx: unknown): Parameters<typeof firecrawl.scrape>[0] => ctx as never;
-const sendCtx = (ctx: unknown): Parameters<AgentMail["sendMessage"]>[0] => ctx as never;
-const inboxCtx = (ctx: unknown): Parameters<AgentMail["createInbox"]>[0] => ctx as never;
 
 /** Active watches whose check is overdue (never-checked count as overdue). */
 export const dueWatches = internalQuery({
@@ -282,10 +222,10 @@ export const recordCheck = internalMutation({
         price,
         currency,
       });
-      await ctx.scheduler.runAfter(0, internal.check.sendEmail, {
+      await ctx.scheduler.runAfter(0, internal.alerts.sendAlert, {
         to: w.ownerEmail,
         subject: msg.subject,
-        text: msg.text,
+        body: msg.text,
       });
     }
 
@@ -304,40 +244,14 @@ export const recordFailure = internalMutation({
       await ctx.db.patch(watchId, { failureCount: failures, status: "dead" });
       if (!w.deadNotified) {
         await ctx.db.patch(watchId, { deadNotified: true });
-        await ctx.scheduler.runAfter(0, internal.check.sendEmail, {
+        await ctx.scheduler.runAfter(0, internal.alerts.sendAlert, {
           to: w.ownerEmail,
           subject: `[PagePing] Watch paused: ${w.title}`,
-          text: `We could not reach ${w.url} after ${failures} consecutive attempts, so this watch is paused.\nIt revives automatically once a later scrape succeeds.`,
+          body: `We could not reach ${w.url} after ${failures} consecutive attempts, so this watch is paused.\nIt revives automatically once a later scrape succeeds.`,
         });
       }
     } else {
       await ctx.db.patch(watchId, { failureCount: failures });
-    }
-    return null;
-  },
-});
-
-export const sendEmail = internalAction({
-  args: { to: v.string(), subject: v.string(), text: v.string() },
-  returns: v.null(),
-  handler: async (ctx, { to, subject, text }) => {
-    try {
-      if (!process.env.AGENTMAIL_API_KEY) {
-        console.warn("[check] AGENTMAIL_API_KEY not set; skipping email");
-        return null;
-      }
-      const cfg = await ctx.runQuery(internal.auth.getConfigRow, {});
-      let inboxId: string | undefined = cfg ? cfg.value.split("|")[0] : undefined;
-      if (!inboxId) {
-        const inbox = await agentmail.createInbox(inboxCtx(ctx));
-        inboxId = String(inbox.inbox_id);
-        await ctx.runMutation(internal.auth.saveConfig, {
-          value: `${inbox.inbox_id}|${inbox.email}`,
-        });
-      }
-      await agentmail.sendMessage(sendCtx(ctx), inboxId, { to, subject, text });
-    } catch (err) {
-      console.warn("[check] email skipped:", err);
     }
     return null;
   },

@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as alerts from "../alerts.js";
 import type * as auth from "../auth.js";
 import type * as check from "../check.js";
 import type * as health from "../health.js";
@@ -20,6 +21,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  alerts: typeof alerts;
   auth: typeof auth;
   check: typeof check;
   health: typeof health;

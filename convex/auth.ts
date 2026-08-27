@@ -3,6 +3,7 @@ import { ConvexError } from "convex/values";
 import { internalAction, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { components, internal } from "./_generated/api";
 import { AgentMail } from "@agentmail/convex";
+import { sha256Hex } from "../src/lib/engine";
 
 // ponytail: no @types/node in this project; Convex exposes deployment env vars via process.env at runtime
 declare const process: { env: Record<string, string | undefined> };
@@ -10,12 +11,6 @@ declare const process: { env: Record<string, string | undefined> };
 // action ctx satisfies the component client structurally at runtime; `as never` skips its stricter copy of Convex types
 const inboxCtx = (ctx: unknown): Parameters<AgentMail["createInbox"]>[0] => ctx as never;
 const sendCtx = (ctx: unknown): Parameters<AgentMail["sendMessage"]>[0] => ctx as never;
-
-// ponytail: duplicate of src/lib/engine's 4-liner because convex/ cannot bundle files outside convex/
-async function sha256Hex(text: string): Promise<string> {
-  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
 
 // ponytail: module-level client, only uses sendMessage/createInbox APIs
 const agentmail = new AgentMail(components.agentmail);
