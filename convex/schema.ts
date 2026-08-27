@@ -23,6 +23,7 @@ export default defineSchema({
     ownerEmail: v.string(),
     url: v.string(),
     title: v.string(),
+    publicId: v.string(),
     condition: v.union(
       v.literal("any-change"),
       v.literal("keyword"),

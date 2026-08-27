@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as health from "../health.js";
+import type * as watches from "../watches.js";
 
 import type {
   ApiFromModules,
@@ -20,6 +21,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   health: typeof health;
+  watches: typeof watches;
 }>;
 
 /**
