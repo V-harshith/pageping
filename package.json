@@ -7,7 +7,8 @@
     "dev": "vite",
     "backend": "convex dev",
     "build": "tsc --noEmit && vite build",
-    "test": "tsx --test tests/*.test.ts"
+    "test": "tsx --test tests/*.test.ts",
+    "deploy": "npx @convex-dev/static-hosting deploy"
   },
   "dependencies": {
     "@agentmail/convex": "^0.1.0",

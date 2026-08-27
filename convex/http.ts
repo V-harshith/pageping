@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { components, internal } from "./_generated/api";
 import { httpAction, internalMutation } from "./_generated/server";
 import { AgentMail } from "@agentmail/convex";
+import { registerStaticRoutes } from "@convex-dev/static-hosting";
 import { CHECK_INTERVAL_MS } from "./check";
 
 // action ctx satisfies the component handler structurally at runtime; `as never` skips its stricter copy
@@ -66,5 +67,8 @@ http.route({
     return json(404, { ok: false, reason: "unknown watch" });
   }),
 });
+
+// Exact routes above win over this catch-all, so /api/check and /agentmail/webhook keep their URLs.
+registerStaticRoutes(http, components.staticHosting);
 
 export default http;
