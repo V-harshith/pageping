@@ -11,7 +11,9 @@
 import type * as alerts from "../alerts.js";
 import type * as auth from "../auth.js";
 import type * as check from "../check.js";
+import type * as crons from "../crons.js";
 import type * as health from "../health.js";
+import type * as scanner from "../scanner.js";
 import type * as watches from "../watches.js";
 
 import type {
@@ -24,7 +26,9 @@ declare const fullApi: ApiFromModules<{
   alerts: typeof alerts;
   auth: typeof auth;
   check: typeof check;
+  crons: typeof crons;
   health: typeof health;
+  scanner: typeof scanner;
   watches: typeof watches;
 }>;
 
