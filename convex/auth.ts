@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
-import { internalAction, internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { action, internalAction, internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { components, internal } from "./_generated/api";
 import { AgentMail } from "@agentmail/convex";
 import { sha256Hex } from "../src/lib/engine";
@@ -96,11 +96,22 @@ export const saveConfig = internalMutation({
   },
 });
 
+/** Public entrypoint for the login screen; plan calls this via useAction. */
+export const requestOtp = action({
+  args: { email: v.string() },
+  returns: v.union(v.object({}), v.object({ debugCode: v.string() })),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ debugCode?: string }> =>
+    ctx.runMutation(internal.auth.requestOtpInternal, args),
+});
+
 /**
  * Creates a fresh 6-digit code for `email`, invalidating prior codes,
  * and schedules delivery via AgentMail. Never throws on mail failure.
  */
-export const requestOtp = internalMutation({
+export const requestOtpInternal = internalMutation({
   args: { email: v.string() },
   returns: v.union(v.object({}), v.object({ debugCode: v.string() })),
   handler: async (ctx, { email }) => {
