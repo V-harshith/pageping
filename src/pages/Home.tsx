@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { getSession, nav } from "../lib/session";
 import AddWatchForm from "../components/AddWatchForm";
 import Logo from "../components/Logo";
-import { BTN_PRIMARY, FOCUS_RING, U_TRANSITION } from "../lib/ui";
+import { BTN_PRIMARY, CARD, FOCUS_RING, U_TRANSITION } from "../lib/ui";
 
 export default function Home() {
   const [signedIn, setSignedIn] = useState(false);
@@ -54,7 +54,7 @@ export default function Home() {
           ["Pick a trigger", "Any change · keyword appears · price drops below."],
           ["Get the email", "Hourly checks, instant diff view, zero spam."],
         ].map(([h, b]) => (
-          <div key={h} className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+          <div key={h} className={CARD + " " + U_TRANSITION}>
             <p className="font-semibold">{h}</p>
             <p className="mt-1 text-sm text-zinc-400">{b}</p>
           </div>
