@@ -19,7 +19,7 @@ A cron checks watches hourly against their conditions; claimable instant recheck
 
 ## Tech stack
 
-Built on **[Convex](https://convex.dev)** — database, queries/mutations/actions, crons, scheduled functions, indexes, and realtime sync in one backend. Pages are fetched by **[Firecrawl](https://firecrawl.dev)** (`@firecrawl/firecrawl` component) and emails are sent/received through **[AgentMail](https://agentmail.to)** (`@agentmail/convex` component). The frontend ships as a React SPA served directly from the Convex deployment via `@convex-dev/static-hosting`.
+Built on **[Convex](https://convex.dev)** — database, queries/mutations/actions, crons, scheduled functions, indexes, and realtime sync in one backend. Pages are fetched by **[Firecrawl](https://firecrawl.dev)** (`@firecrawl/firecrawl` component) and emails are sent through **[AgentMail](https://agentmail.to)**'s REST API. The frontend ships as a React SPA served directly from the Convex deployment via `@convex-dev/static-hosting`.
 
 Auth is custom email-OTP (code hashed with Web Crypto, session tokens, 30-day sessions).
 

@@ -2,17 +2,8 @@ import { httpRouter } from "convex/server";
 import { v } from "convex/values";
 import { components, internal } from "./_generated/api";
 import { httpAction, internalMutation } from "./_generated/server";
-import { AgentMail } from "@agentmail/convex";
 import { registerStaticRoutes } from "@convex-dev/static-hosting";
 import { CHECK_INTERVAL_MS } from "./check";
-
-// action ctx satisfies the component handler structurally at runtime; `as never` skips its stricter copy
-const hookCtx = (ctx: unknown): Parameters<AgentMail["handleWebhook"]>[0] => ctx as never;
-
-// README "React to inbound mail": this instance owns webhook dispatch.
-const agentmail = new AgentMail(components.agentmail, {
-  onMessageReceived: internal.emailWebhook.onMessageReceived,
-});
 
 const json = (status: number, body: Record<string, unknown>) =>
   new Response(JSON.stringify(body), {
@@ -42,12 +33,6 @@ export const recheckClaimed = internalMutation({
 const http = httpRouter();
 
 http.route({
-  path: "/agentmail/webhook",
-  method: "POST",
-  handler: httpAction(async (ctx, req) => agentmail.handleWebhook(hookCtx(ctx), req)),
-});
-
-http.route({
   path: "/api/check",
   method: "POST",
   handler: httpAction(async (ctx, req) => {
@@ -68,7 +53,7 @@ http.route({
   }),
 });
 
-// Exact routes above win over this catch-all, so /api/check and /agentmail/webhook keep their URLs.
+// Exact routes above win over this catch-all, so /api/check keeps its URL.
 registerStaticRoutes(http, components.staticHosting);
 
 export default http;

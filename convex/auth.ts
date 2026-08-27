@@ -1,19 +1,11 @@
 import { v } from "convex/values";
 import { ConvexError } from "convex/values";
-import { action, internalAction, internalMutation, internalQuery, mutation, query } from "./_generated/server";
-import { components, internal } from "./_generated/api";
-import { AgentMail } from "@agentmail/convex";
+import { action, internalAction, internalMutation, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { sha256Hex } from "../src/lib/engine";
 
 // ponytail: no @types/node in this project; Convex exposes deployment env vars via process.env at runtime
 declare const process: { env: Record<string, string | undefined> };
-
-// action ctx satisfies the component client structurally at runtime; `as never` skips its stricter copy of Convex types
-const inboxCtx = (ctx: unknown): Parameters<AgentMail["createInbox"]>[0] => ctx as never;
-const sendCtx = (ctx: unknown): Parameters<AgentMail["sendMessage"]>[0] => ctx as never;
-
-// ponytail: module-level client, only uses sendMessage/createInbox APIs
-const agentmail = new AgentMail(components.agentmail);
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -49,16 +41,7 @@ export const sendOtpEmail = internalAction({
         console.warn("[auth] AGENTMAIL_API_KEY not set; skipping OTP email");
         return null;
       }
-      const cfg = await ctx.runQuery(internal.auth.getConfigRow, {});
-      let inboxId: string | undefined = cfg ? cfg.value.split("|")[0] : undefined;
-      if (!inboxId) {
-        const inbox = await agentmail.createInbox(inboxCtx(ctx));
-        inboxId = String(inbox.inbox_id);
-        await ctx.runMutation(internal.auth.saveConfig, {
-          value: `${inbox.inbox_id}|${inbox.email}`,
-        });
-      }
-      await agentmail.sendMessage(sendCtx(ctx), inboxId, {
+      await ctx.runAction(internal.mail.sendEmail, {
         to: email,
         subject: "Your PagePing login code",
         text: `Your verification code is ${code}. It expires in 10 minutes.`,
@@ -66,32 +49,6 @@ export const sendOtpEmail = internalAction({
     } catch (err) {
       console.warn("[auth] OTP email skipped:", err);
     }
-    return null;
-  },
-});
-
-export const getConfigRow = internalQuery({
-  args: {},
-  returns: v.union(v.null(), v.object({ key: v.string(), value: v.string() })),
-  handler: async (ctx) => {
-    const row = await ctx.db
-      .query("config")
-      .withIndex("by_key", (q) => q.eq("key", "agentmail_inbox"))
-      .unique();
-    return row ? { key: row.key, value: row.value } : null;
-  },
-});
-
-export const saveConfig = internalMutation({
-  args: { value: v.string() },
-  returns: v.null(),
-  handler: async (ctx, { value }) => {
-    const existing = await ctx.db
-      .query("config")
-      .withIndex("by_key", (q) => q.eq("key", "agentmail_inbox"))
-      .unique();
-    if (existing) await ctx.db.patch(existing._id, { value });
-    else await ctx.db.insert("config", { key: "agentmail_inbox", value });
     return null;
   },
 });
