@@ -33,6 +33,8 @@ export default defineSchema({
     targetPrice: v.optional(v.number()),
     currency: v.optional(v.string()),
     currentPrice: v.optional(v.number()),
+    paused: v.optional(v.boolean()),
+    webhookUrl: v.optional(v.string()),
     status: v.union(v.literal("active"), v.literal("dead")),
     deadNotified: v.boolean(),
     failureCount: v.number(),
@@ -53,6 +55,8 @@ export default defineSchema({
     contentHash: v.string(),
     markdown: v.string(),
     price: v.optional(v.number()),
+    screenshotId: v.optional(v.id("_storage")),
+    aiSummary: v.optional(v.string()),
   }).index("by_watch_time", ["watchId", "checkedAt"]),
 
   alertLog: defineTable({

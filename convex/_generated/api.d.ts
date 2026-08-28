@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as ai from "../ai.js";
 import type * as alerts from "../alerts.js";
 import type * as auth from "../auth.js";
 import type * as check from "../check.js";
@@ -17,6 +18,7 @@ import type * as http from "../http.js";
 import type * as mail from "../mail.js";
 import type * as scanner from "../scanner.js";
 import type * as watches from "../watches.js";
+import type * as webhooks from "../webhooks.js";
 
 import type {
   ApiFromModules,
@@ -25,6 +27,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ai: typeof ai;
   alerts: typeof alerts;
   auth: typeof auth;
   check: typeof check;
@@ -34,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   mail: typeof mail;
   scanner: typeof scanner;
   watches: typeof watches;
+  webhooks: typeof webhooks;
 }>;
 
 /**

@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { components, internal } from "./_generated/api";
+import type { Id } from "./_generated/dataModel";
 import { FirecrawlClient } from "@firecrawl/firecrawl-convex";
 import { extractPrice, evaluate, normalizeContent, sha256Hex } from "../src/lib/engine";
 
@@ -12,11 +13,15 @@ const MAX_FAILURES = 5;
 const SNAPSHOT_CAP = 20;
 
 export function isDueWatch(
-  w: { status: string; lastCheckedAt?: number },
+  w: { status: string; lastCheckedAt?: number; paused?: boolean },
   now: number,
   intervalMs = CHECK_INTERVAL_MS,
 ): boolean {
-  return w.status === "active" && (w.lastCheckedAt === undefined || now - w.lastCheckedAt >= intervalMs);
+  return (
+    w.status === "active" &&
+    w.paused !== true &&
+    (w.lastCheckedAt === undefined || now - w.lastCheckedAt >= intervalMs)
+  );
 }
 
 type AlertKind = NonNullable<ReturnType<typeof evaluate>["alert"]>;
@@ -69,7 +74,7 @@ export const loadWatch = internalQuery({
   returns: v.union(v.null(), v.object({ url: v.string(), title: v.string() })),
   handler: async (ctx, { watchId }) => {
     const w = await ctx.db.get(watchId);
-    if (!w || w.status !== "active") return null;
+    if (!w || w.status !== "active" || w.paused === true) return null;
     return { url: w.url, title: w.title };
   },
 });
@@ -82,19 +87,32 @@ export const runCheck = internalAction({
     if (!w) return null;
     try {
       const doc = await firecrawl.scrape(scrapeCtx(ctx), w.url, {
-        formats: ["markdown"],
+        formats: ["markdown", "screenshot"],
         onlyMainContent: true,
         maxAge: 0,
       });
       const markdown = doc.markdown ?? "";
       if (!markdown.trim()) throw new Error("empty scrape result");
       const found = extractPrice(markdown);
+      let screenshotId: string | undefined;
+      const shot = (doc as { screenshot?: string }).screenshot;
+      if (shot) {
+        try {
+          const bytes = shot.startsWith("data:")
+            ? base64Bytes(shot.slice(shot.indexOf(",") + 1))
+            : await (await fetch(shot)).arrayBuffer();
+          screenshotId = await ctx.storage.store(new Blob([bytes]));
+        } catch (err) {
+          console.warn("[check] screenshot capture failed:", err);
+        }
+      }
       await ctx.runMutation(internal.check.recordCheck, {
         watchId,
         markdown,
         title: doc.metadata?.title?.trim() || w.title,
         price: found?.price,
         currency: found?.currency,
+        ...(screenshotId ? { screenshotId: screenshotId as never } : {}),
       });
     } catch (err) {
       console.warn(`[check] scrape failed for ${watchId}:`, err);
@@ -103,6 +121,13 @@ export const runCheck = internalAction({
     return null;
   },
 });
+
+function base64Bytes(b64: string): ArrayBuffer {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
 
 function describeAlert(kind: AlertKind, opts: {
   title: string;
@@ -141,12 +166,13 @@ export const recordCheck = internalMutation({
     title: v.string(),
     price: v.optional(v.number()),
     currency: v.optional(v.string()),
+    screenshotId: v.optional(v.id("_storage")),
   },
   returns: v.object({
     changed: v.boolean(),
     alert: v.union(v.null(), v.literal("change"), v.literal("keyword"), v.literal("price")),
   }),
-  handler: async (ctx, { watchId, markdown, title, price, currency }) => {
+  handler: async (ctx, { watchId, markdown, title, price, currency, screenshotId }) => {
     const w = await ctx.db.get(watchId);
     if (!w) return { changed: false, alert: null };
 
@@ -188,14 +214,16 @@ export const recordCheck = internalMutation({
     if (currency != null) patch.currency = currency;
     await ctx.db.patch(watchId, patch);
 
+    let snapId: Id<"snapshots"> | undefined;
     if (out.changed && normalized) {
       const checkedAt = Date.now();
-      await ctx.db.insert("snapshots", {
+      snapId = await ctx.db.insert("snapshots", {
         watchId,
         checkedAt,
         contentHash: nextHash,
         markdown: normalized,
         ...(price != null ? { price } : {}),
+        ...(screenshotId ? { screenshotId } : {}),
       });
       const snaps = await ctx.db
         .query("snapshots")
@@ -227,6 +255,30 @@ export const recordCheck = internalMutation({
         subject: msg.subject,
         body: msg.text,
       });
+      if (w.webhookUrl) {
+        await ctx.scheduler.runAfter(0, internal.webhooks.deliver, {
+          url: w.webhookUrl,
+          payload: {
+            event: out.alert,
+            publicId: w.publicId,
+            title,
+            pageUrl: w.url,
+            ...(price != null ? { price } : {}),
+            ...(currency ? { currency } : {}),
+            checkedAt: now,
+          },
+        });
+      }
+      if (snapId) {
+        await ctx.scheduler.runAfter(0, internal.ai.summarize, {
+          snapshotId: snapId,
+          title,
+          url: w.url,
+          markdown: normalized.slice(0, 3000),
+          kind: out.alert,
+          ...(price != null ? { price } : {}),
+        });
+      }
     }
 
     return { changed: out.changed, alert: out.alert };

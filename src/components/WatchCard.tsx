@@ -19,8 +19,19 @@ const LABELS = {
 
 export default function WatchCard({ w }: { w: WatchView }) {
   const del = useMutation(api.watches.remove);
+  const upd = useMutation(api.watches.update);
   const [busy, setBusy] = useState(false);
   const sid = getSession();
+
+  async function togglePaused() {
+    if (!sid) return;
+    try {
+      await upd({ token: sid, id: w._id, paused: w.paused !== true });
+      toast(w.paused ? "Watch resumed." : "Watch paused.", "success");
+    } catch {
+      toast("Something went wrong.");
+    }
+  }
 
   async function refresh() {
     if (!sid) return;
@@ -81,6 +92,7 @@ export default function WatchCard({ w }: { w: WatchView }) {
           ? `${Math.max(1, Math.round((Date.now() - w.lastCheckedAt) / 60000))}m ago`
           : "never"}
         {w.status === "dead" && " · DEAD (site unreachable)"}
+        {w.paused && " · paused"}
         {" · "}
         <span className="font-mono text-stone-400">id {w.publicId}</span>
       </p>
@@ -99,6 +111,9 @@ export default function WatchCard({ w }: { w: WatchView }) {
           onClick={() => void refresh()}
         >
           Refresh now
+        </button>
+        <button className={BTN_GHOST} onClick={() => void togglePaused()}>
+          {w.paused ? "Resume" : "Pause"}
         </button>
         <button
           className={`ml-auto ${BTN_DANGER}`}

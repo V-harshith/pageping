@@ -4,6 +4,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import DiffView from "../components/DiffView";
 import AddWatchForm from "../components/AddWatchForm";
 import Logo from "../components/Logo";
+import Sparkline from "../components/Sparkline";
 import { nav, getSession } from "../lib/session";
 import { money } from "../lib/money";
 import { CARD, FOCUS_RING, SKELETON, U_TRANSITION, statusPill } from "../lib/ui";
@@ -106,6 +107,48 @@ export default function WatchPage({ id }: { id: string }) {
           This site stopped responding — checks are paused.
         </p>
       )}
+
+      {latest?.aiSummary && (
+        <section className={`mt-6 border-l-2 border-emerald-500 bg-white p-4 ${CARD}`}>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+            What changed (AI summary)
+          </h3>
+          <p className="mt-2 text-sm text-stone-700">{latest.aiSummary}</p>
+        </section>
+      )}
+
+      {latest?.screenshotUrl && (
+        <section className="mt-6">
+          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
+            Latest screenshot
+          </h3>
+          <a href={latest.screenshotUrl} target="_blank" rel="noreferrer">
+            <img
+              src={latest.screenshotUrl}
+              alt={`Screenshot of ${watch.title || watch.url}`}
+              className="w-full rounded-xl border border-stone-200"
+              loading="lazy"
+            />
+          </a>
+        </section>
+      )}
+
+      {(() => {
+        const pts = [...snapshots]
+          .reverse()
+          .filter((s) => s.price != null)
+          .map((s) => ({ checkedAt: s.checkedAt, price: s.price as number }));
+        return pts.length >= 2 ? (
+          <section className="mt-6">
+            <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">
+              Price history
+            </h3>
+            <div className={CARD}>
+              <Sparkline points={pts} currency={watch.currency ?? ""} />
+            </div>
+          </section>
+        ) : null;
+      })()}
 
       <section className="mt-6">
         <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-stone-500">Latest change</h3>

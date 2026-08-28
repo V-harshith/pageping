@@ -68,6 +68,8 @@ const watchView = {
   targetPrice: v.optional(v.number()),
   currency: v.optional(v.string()),
   currentPrice: v.optional(v.number()),
+  paused: v.optional(v.boolean()),
+  webhookUrl: v.optional(v.string()),
   status: v.union(v.literal("active"), v.literal("dead")),
   deadNotified: v.boolean(),
   failureCount: v.number(),
@@ -93,9 +95,10 @@ export const create = mutation({
     keyword: v.optional(v.string()),
     targetPrice: v.optional(v.number()),
     currency: v.optional(v.string()),
+    webhookUrl: v.optional(v.string()),
   },
   returns: v.object({ id: v.id("watches"), publicId: v.string() }),
-  handler: async (ctx, { token, url, title, condition, keyword, targetPrice, currency }) => {
+  handler: async (ctx, { token, url, title, condition, keyword, targetPrice, currency, webhookUrl }) => {
     const email = await requireEmail(ctx, token);
     const cleanUrl = validateWatchUrl(url);
     if (!conditionArgsValid(condition, keyword, targetPrice)) {
@@ -106,6 +109,10 @@ export const create = mutation({
       );
     }
     const publicId = makePublicId();
+    const hook = webhookUrl?.trim();
+    if (hook && !/^https?:\/\//i.test(hook)) {
+      throw new ConvexError("Webhook URL must start with http:// or https://");
+    }
     const id = await ctx.db.insert("watches", {
       ownerEmail: email,
       url: cleanUrl,
@@ -115,6 +122,7 @@ export const create = mutation({
       keyword: condition === "keyword" ? keyword!.trim() : undefined,
       targetPrice: condition === "price-below" ? targetPrice : undefined,
       currency,
+      ...(hook ? { webhookUrl: hook } : {}),
       status: "active",
       deadNotified: false,
       failureCount: 0,
@@ -171,6 +179,9 @@ export const getPublic = query({
           contentHash: v.string(),
           checkedAt: v.number(),
           markdown: v.string(),
+          price: v.optional(v.number()),
+          aiSummary: v.optional(v.string()),
+          screenshotUrl: v.union(v.null(), v.string()),
         }),
       ),
     }),
@@ -194,11 +205,16 @@ export const getPublic = query({
         keyword: doc.keyword,
         lastCheckedAt: doc.lastCheckedAt,
       },
-      snapshots: snaps.map((s) => ({
-        contentHash: s.contentHash,
-        checkedAt: s.checkedAt,
-        markdown: s.markdown,
-      })),
+      snapshots: await Promise.all(
+        snaps.map(async (s) => ({
+          contentHash: s.contentHash,
+          checkedAt: s.checkedAt,
+          markdown: s.markdown,
+          ...(s.price != null ? { price: s.price } : {}),
+          ...(s.aiSummary ? { aiSummary: s.aiSummary } : {}),
+          screenshotUrl: s.screenshotId ? await ctx.storage.getUrl(s.screenshotId) : null,
+        })),
+      ),
     };
   },
 });
@@ -213,6 +229,8 @@ export const update = mutation({
     targetPrice: v.optional(v.number()),
     currency: v.optional(v.string()),
     status: v.optional(v.union(v.literal("active"), v.literal("dead"))),
+    paused: v.optional(v.boolean()),
+    webhookUrl: v.optional(v.string()),
   },
   returns: v.union(v.null(), v.object(watchView)),
   handler: async (ctx, { token, id, ...fields }) => {

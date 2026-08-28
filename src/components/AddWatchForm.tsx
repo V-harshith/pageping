@@ -16,6 +16,7 @@ export default function AddWatchForm({ presetUrl = "" }: { presetUrl?: string })
   const [condition, setCondition] = useState<"any-change" | "keyword" | "price-below">("any-change");
   const [keyword, setKeyword] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -35,8 +36,9 @@ export default function AddWatchForm({ presetUrl = "" }: { presetUrl?: string })
         ...(condition === "price-below"
           ? { targetPrice: tp, currency: "USD" }
           : {}),
+        ...(webhookUrl.trim() ? { webhookUrl: webhookUrl.trim() } : {}),
       });
-      setUrl(""); setKeyword(""); setTargetPrice("");
+      setUrl(""); setKeyword(""); setTargetPrice(""); setWebhookUrl("");
       toast("Watching.", "success");
     } catch (e) {
       toast(errMsg(e));
@@ -85,6 +87,13 @@ export default function AddWatchForm({ presetUrl = "" }: { presetUrl?: string })
           onChange={(e) => setTargetPrice(e.target.value)}
         />
       )}
+      <input
+        className={`mt-2 ${INPUT}`}
+        placeholder="Optional webhook URL — POSTs JSON on every alert"
+        aria-label="Webhook URL (optional)"
+        value={webhookUrl}
+        onChange={(e) => setWebhookUrl(e.target.value)}
+      />
       <button
         className={`mt-3 ${BTN_PRIMARY} w-full`}
         disabled={busy || !url.trim()}
