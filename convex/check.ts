@@ -225,6 +225,14 @@ export const recordCheck = internalMutation({
         ...(price != null ? { price } : {}),
         ...(screenshotId ? { screenshotId } : {}),
       });
+      await ctx.scheduler.runAfter(0, internal.ai.summarize, {
+        snapshotId: snapId,
+        title,
+        url: w.url,
+        markdown: normalized.slice(0, 3000),
+        kind: out.alert ?? "change",
+        ...(price != null ? { price } : {}),
+      });
       const snaps = await ctx.db
         .query("snapshots")
         .withIndex("by_watch_time", (q) => q.eq("watchId", watchId))
@@ -267,16 +275,6 @@ export const recordCheck = internalMutation({
             ...(currency ? { currency } : {}),
             checkedAt: now,
           },
-        });
-      }
-      if (snapId) {
-        await ctx.scheduler.runAfter(0, internal.ai.summarize, {
-          snapshotId: snapId,
-          title,
-          url: w.url,
-          markdown: normalized.slice(0, 3000),
-          kind: out.alert,
-          ...(price != null ? { price } : {}),
         });
       }
     }
