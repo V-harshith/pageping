@@ -59,10 +59,25 @@ export const sendEmail = internalAction({
     const cfg = await ctx.runQuery(internal.mail.getConfigRow, {});
     let inboxId = cfg ? cfg.value.split("|")[0] : undefined;
     if (!inboxId) {
-      const inbox = await agentmailFetch("/inboxes", { method: "POST", body: {} });
-      inboxId = String(inbox.inbox_id);
+      // Reuse an existing inbox when possible — free plan caps inbox creation at 3.
+      // ponytail: list is permission-capped on some API keys (403); fall through to create.
+      let inbox: { inbox_id?: unknown; email?: string } | undefined;
+      try {
+        const listed = await agentmailFetch("/inboxes");
+        const arr: Array<{ inbox_id?: unknown; email?: string }> = Array.isArray(listed)
+          ? listed
+          : ((listed?.inboxes ?? []) as Array<{ inbox_id?: unknown; email?: string }>);
+        inbox = arr[0];
+      } catch {
+        inbox = undefined;
+      }
+      const chosen =
+        inbox && (inbox.inbox_id !== undefined || inbox.email !== undefined)
+          ? inbox
+          : await agentmailFetch("/inboxes", { method: "POST", body: {} });
+      inboxId = String(chosen.inbox_id ?? chosen.email);
       await ctx.runMutation(internal.mail.saveConfig, {
-        value: `${inbox.inbox_id}|${inbox.email}`,
+        value: `${chosen.inbox_id ?? chosen.email}|${chosen.email ?? chosen.inbox_id}`,
       });
     }
     await agentmailFetch(`/inboxes/${inboxId}/messages/send`, {

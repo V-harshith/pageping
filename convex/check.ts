@@ -92,7 +92,7 @@ export const runCheck = internalAction({
       await ctx.runMutation(internal.check.recordCheck, {
         watchId,
         markdown,
-        title: doc.metadata?.title ?? w.title,
+        title: doc.metadata?.title?.trim() || w.title,
         price: found?.price,
         currency: found?.currency,
       });
