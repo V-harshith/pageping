@@ -4,7 +4,7 @@
 - **Event:** Convex All Gas Hackathon
 - **What it does:** Paste any URL to watch the page for changes (any change, keyword appears, or price below a threshold) and get email alerts on a public, shareable diff timeline.
 - **Live app:** https://abundant-sardine-977.convex.site
-- **Repo:** none
+- **Repo:** https://github.com/V-harshith/pageping
 - **Frontend:** Convex static hosting
 - **Convex deployment:** https://abundant-sardine-977.convex.cloud
 - **Components:** @convex-dev/static-hosting, @firecrawl/firecrawl-convex
