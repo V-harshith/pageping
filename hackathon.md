@@ -68,3 +68,20 @@ Convex file storage, and AI change summaries written to every new snapshot
 `convex/ai.ts`). Deployed functions to the production deployment and the
 built SPA to Convex static hosting; live app verified returning the dashboard
 and public watch pages.
+
+### 2026-08-30 - redeploy (frontend only)
+Fixed the production frontend: the deployed bundle had been built against a
+stale `.env.local` and pointed at a dead old deployment's cloud URL. Rebuilt
+with the production `VITE_CONVEX_URL`/`VITE_CONVEX_SITE_URL` injected via
+process env and re-uploaded the SPA with
+`npx @convex-dev/static-hosting deploy --skip-convex` (backend already
+current at b65a115). Verified the served bundle references the production
+cloud + site URLs. Then ran the end-to-end product demo against production:
+real email-OTP login through an AgentMail inbox, created two watches
+(CoinGecko BTC price-below alert, httpbin.org/uuid any-change), forced live
+rechecks from the UI, and captured the realtime snapshot/diff/screenshot
+updates on camera. Backfilled extra checks so the BTC watch shows a 3-point
+price sparkline and the uuid watch shows a diff; confirmed both alert emails
+(price drop + page changed) landed in the inbox. Captured landing,
+dashboard, and both watch-page screenshots for the README and assembled a
+47-second product demo video (h264 mp4).

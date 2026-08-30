@@ -2,7 +2,7 @@
 
 Watch any web page and get an email the moment it changes — hosted, free, and open source. **Live: https://abundant-sardine-977.convex.site**
 
-> *(screenshot placeholder — see the live app at the URL above)*
+![Dashboard](docs/screenshots/dashboard.png)
 
 ## Why
 
@@ -12,8 +12,16 @@ Existing page-watch tools make you choose between money and work: [Visualping](h
 
 - **3 watch triggers** — *Any change* on the page, *keyword appears* in content, or *price drops below* a threshold (prices parsed with `$ € £ ¥ ₹` support)
 - **Track by email** — login with just an email OTP (no passwords); every alert lands in your inbox
-- **Public diff pages** — every watch gets a shareable `/w/<publicId>` link showing the live check history
+- **Public diff pages** — every watch gets a shareable `/w/<id>` link showing the live check history
 - **Realtime UI** — snapshots stream into the dashboard as they happen, powered by Convex reactive queries
+- **Price sparkline** — watch pages chart the price history of every check
+- **Visual snapshots** — each change is captured with a full-page screenshot stored in Convex file storage
+
+![Watch page with sparkline, screenshot and diff](docs/screenshots/watch-btc.png)
+
+- **Pause / resume** any watch from the dashboard without losing its history
+- **Webhooks** — optional webhook URL per watch; every alert POSTs a JSON payload
+- **AI change summaries** *(optional)* — set `OPENAI_API_KEY` and each diff gets a plain-English "what changed" summary on the watch page
 
 A cron checks watches hourly against their conditions; claimable instant rechecks let you force a check from the share page or UI.
 
@@ -40,7 +48,8 @@ Set your secrets on the deployment (values never committed):
 ```bash
 npx convex env set AGENTMAIL_API_KEY <your key>
 npx convex env set FIRECRAWL_API_KEY <your key>
-# optional while developing:
+# optional:
+npx convex env set OPENAI_API_KEY <your key>   # enables AI change summaries
 npx convex env set AUTH_DEBUG true   # returns debugCode from requestOtp instead of emailing
 ```
 
@@ -49,7 +58,7 @@ Then run the dev loop (creates your deployment and writes `.env.local` with `VIT
 ```bash
 npx convex dev      # backend + generated frontend env vars
 npm run build       # tsc --noEmit && vite build
-npx @convex-dev/static-hosting upload --build --prod   # serve dist/ from the same URL as the API
+npx @convex-dev/static-hosting deploy   # deploy backend + serve dist/ from the same URL as the API
 ```
 
 Crons (hourly checker) are defined in `convex/crons.ts` and install themselves with the deployment.
